@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typewriting Feature</title>
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('WickedGrit.ttf') format('truetype');
+        }
+        body {
+            font-family: 'CustomFont', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        #text {
+            font-size: 24px;
+            color: #333;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="text"></div>
+
+    <script>
+        const textElement = document.getElementById('text');
+        const typingSpeed = 100; // milliseconds per letter
+        let index = 0;
+        let typingInterval;
+
+        // Function to handle the typing effect
+        function typeWriter(message) {
+            if (index < message.length) {
+                textElement.textContent += message[index];
+                index++;
+            } else {
+                clearInterval(typingInterval);
+            }
+        }
+
+        // Start the typing effect
+        function startTyping(message) {
+            index = 0;
+            textElement.textContent = "";
+            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
+        }
+
+        // Allow bypassing the typing effect by clicking
+        document.body.addEventListener('click', () => {
+            clearInterval(typingInterval);
+            textElement.textContent = currentMessage;
+        });
+
+        let currentMessage = "";
+
+        async function readDocxFile(fileName) {
+            const response = await fetch(fileName);
+            const arrayBuffer = await response.arrayBuffer();
+            const text = await extractTextFromDocx(arrayBuffer);
+            currentMessage = text;
+            startTyping(text);
+        }
+
+        function extractTextFromDocx(arrayBuffer) {
+            return new Promise((resolve, reject) => {
+                const JSZip = window.JSZip;
+                JSZip.loadAsync(arrayBuffer).then((zip) => {
+                    return zip.file("word/document.xml").async("string");
+                }).then((xml) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(xml, "application/xml");
+                    const paragraphs = doc.getElementsByTagName("w:t");
+                    let text = "";
+                    for (let i = 0; i < paragraphs.length; i++) {
+                        text += paragraphs[i].textContent;
+                    }
+                    resolve(text);
+                }).catch(reject);
+            });
+        }
+
+        async function readPdfFile(fileName) {
+            const response = await fetch(fileName);
+            const arrayBuffer = await response.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(' ') + '\n';
+            }
+            currentMessage = text;
+            startTyping(text);
+        }
+
+        // Load the designated file from the repository
+        const designatedFileName = "Self-Quarntine.pdf"; // Replace "file.pdf" with your file name in the repository
+        if (designatedFileName.endsWith('.docx')) {
+            readDocxFile(designatedFileName);
+        } else if (designatedFileName.endsWith('.pdf')) {
+            readPdfFile(designatedFileName);
+        }
+
+        // Load the PDF.js library
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
+        script.onload = () => console.log("PDF.js loaded.");
+        document.head.appendChild(script);
+
+        // Load the JSZip library
+        const jsZipScript = document.createElement('script');
+        jsZipScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        jsZipScript.onload = () => console.log("JSZip loaded.");
+        document.head.appendChild(jsZipScript);
+    </script>
+</body>
+</html>
