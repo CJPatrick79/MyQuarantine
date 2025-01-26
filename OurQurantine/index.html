@@ -31,13 +31,12 @@
 
     <script>
         const textElement = document.getElementById('text');
-        const message = "Welcome to our website! Enjoy the typewriting effect and explore.";
         const typingSpeed = 100; // milliseconds per letter
         let index = 0;
         let typingInterval;
 
         // Function to handle the typing effect
-        function typeWriter() {
+        function typeWriter(message) {
             if (index < message.length) {
                 textElement.textContent += message[index];
                 index++;
@@ -47,24 +46,26 @@
         }
 
         // Start the typing effect
-        typingInterval = setInterval(typeWriter, typingSpeed);
+        function startTyping(message) {
+            index = 0;
+            textElement.textContent = "";
+            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
+        }
 
         // Allow bypassing the typing effect by clicking
         document.body.addEventListener('click', () => {
             clearInterval(typingInterval);
-            textElement.textContent = message;
+            textElement.textContent = currentMessage;
         });
-    </script>
 
-    <script>
-        async function readDocxFile(file) {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const arrayBuffer = event.target.result;
-                const text = await extractTextFromDocx(arrayBuffer);
-                textElement.textContent = text;
-            };
-            reader.readAsArrayBuffer(file);
+        let currentMessage = "";
+
+        async function readDocxFile(fileName) {
+            const response = await fetch(fileName);
+            const arrayBuffer = await response.arrayBuffer();
+            const text = await extractTextFromDocx(arrayBuffer);
+            currentMessage = text;
+            startTyping(text);
         }
 
         function extractTextFromDocx(arrayBuffer) {
@@ -85,45 +86,39 @@
             });
         }
 
-        async function readPdfFile(file) {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const arrayBuffer = event.target.result;
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                let text = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    text += content.items.map(item => item.str).join(' ') + '\n';
-                }
-                textElement.textContent = text;
-            };
-            reader.readAsArrayBuffer(file);
+        async function readPdfFile(fileName) {
+            const response = await fetch(fileName);
+            const arrayBuffer = await response.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(' ') + '\n';
+            }
+            currentMessage = text;
+            startTyping(text);
         }
 
-        document.body.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && file.name.endsWith('.docx')) {
-                readDocxFile(file);
-            } else if (file && file.name.endsWith('.pdf')) {
-                readPdfFile(file);
-            }
-        });
-
-        // Add file input to the page
-        const fileInput = document.createElement('Self-Quarntine');
-        fileInput.type = 'file';
-        fileInput.accept = '.docx, .pdf';
-        fileInput.style.position = 'absolute';
-        fileInput.style.top = '10px';
-        fileInput.style.right = '10px';
-        document.body.appendChild(fileInput);
+        // Load the designated file from the repository
+        const designatedFileName = "Self-Quarntine.pdf"; // Replace "file.pdf" with your file name in the repository
+        if (designatedFileName.endsWith('.docx')) {
+            readDocxFile(designatedFileName);
+        } else if (designatedFileName.endsWith('.pdf')) {
+            readPdfFile(designatedFileName);
+        }
 
         // Load the PDF.js library
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
         script.onload = () => console.log("PDF.js loaded.");
         document.head.appendChild(script);
+
+        // Load the JSZip library
+        const jsZipScript = document.createElement('script');
+        jsZipScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        jsZipScript.onload = () => console.log("JSZip loaded.");
+        document.head.appendChild(jsZipScript);
     </script>
 </body>
 </html>
