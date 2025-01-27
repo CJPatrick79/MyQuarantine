@@ -16,13 +16,22 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f4f4f9;
+            background-image: url('Paper-Background.png'); /* Replace with your background image path */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         #text {
             font-size: 24px;
             color: #333;
             white-space: pre-wrap;
             text-align: left;
+            line-height: 1.6; /* Adjust line spacing */
+            text-indent: 2em; /* Indent paragraphs */
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
         }
     </style>
 </head>
@@ -64,8 +73,8 @@
             const response = await fetch(fileName);
             const arrayBuffer = await response.arrayBuffer();
             const text = await extractTextFromDocx(arrayBuffer);
-            currentMessage = text;
-            startTyping(text);
+            currentMessage = formatText(text);
+            startTyping(currentMessage);
         }
 
         function extractTextFromDocx(arrayBuffer) {
@@ -79,7 +88,7 @@
                     const paragraphs = doc.getElementsByTagName("w:t");
                     let text = "";
                     for (let i = 0; i < paragraphs.length; i++) {
-                        text += paragraphs[i].textContent;
+                        text += paragraphs[i].textContent + "\n\n"; // Add double line breaks for paragraphs
                     }
                     resolve(text);
                 }).catch(reject);
@@ -94,14 +103,22 @@
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
-                text += content.items.map(item => item.str).join(' ') + '\n';
+                text += content.items.map(item => item.str).join(' ') + "\n\n"; // Add double line breaks for paragraphs
             }
-            currentMessage = text;
-            startTyping(text);
+            currentMessage = formatText(text);
+            startTyping(currentMessage);
+        }
+
+        // Format text to ensure proper paragraph style
+        function formatText(text) {
+            return text
+                .trim()
+                .replace(/\n\s*\n/g, '\n\n') // Ensure consistent paragraph spacing
+                .replace(/\n/g, '\n   '); // Add indentation for each paragraph
         }
 
         // Load the designated file from the repository
-        const designatedFileName = "Self-Quarntine.pdf"; // Replace "file.pdf" with your file name in the repository
+        const designatedFileName = "Self-Quarantine.pdf"; // Replace with your file name in the repository
         if (designatedFileName.endsWith('.docx')) {
             readDocxFile(designatedFileName);
         } else if (designatedFileName.endsWith('.pdf')) {
