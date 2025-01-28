@@ -22,16 +22,21 @@
             background-repeat: no-repeat;
         }
         #text {
-            font-size: 24px;
+            width: 90%;
+            max-width: 800px;
+            font-size: 18px;
             color: #333;
-            white-space: pre-wrap;
-            text-align: left;
-            line-height: 1.6; /* Adjust line spacing */
-            text-indent: 2em; /* Indent paragraphs */
+            line-height: 1.8; /* Adjust line spacing */
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background for readability */
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            overflow-y: auto; /* Scroll if content overflows */
+            max-height: 90vh; /* Prevent text overflow */
+        }
+        p {
+            text-indent: 2em; /* Indent paragraphs */
+            margin-bottom: 1em; /* Add spacing between paragraphs */
         }
     </style>
 </head>
@@ -40,44 +45,15 @@
 
     <script>
         const textElement = document.getElementById('text');
-        const typingSpeed = 50; // milliseconds per letter
-        let index = 0;
-        let typingInterval;
-
-        // Function to handle the typing effect
-        function typeWriter(message) {
-            if (index < message.length) {
-                textElement.textContent += message[index];
-                index++;
-            } else {
-                clearInterval(typingInterval);
-            }
-        }
-
-        // Start the typing effect
-        function startTyping(message) {
-            index = 0;
-            textElement.textContent = "";
-            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
-        }
-
-        // Allow bypassing the typing effect by clicking
-        document.body.addEventListener('click', () => {
-            clearInterval(typingInterval);
-            textElement.textContent = currentMessage;
-        });
-
-        let currentMessage = "";
 
         async function readDocxFile(fileName) {
             const response = await fetch(fileName);
             const arrayBuffer = await response.arrayBuffer();
-            const text = await extractTextFromDocx(arrayBuffer);
-            currentMessage = formatText(text);
-            startTyping(currentMessage);
+            const paragraphs = await extractParagraphsFromDocx(arrayBuffer);
+            renderContent(paragraphs);
         }
 
-        function extractTextFromDocx(arrayBuffer) {
+        function extractParagraphsFromDocx(arrayBuffer) {
             return new Promise((resolve, reject) => {
                 const JSZip = window.JSZip;
                 JSZip.loadAsync(arrayBuffer).then((zip) => {
@@ -85,12 +61,19 @@
                 }).then((xml) => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(xml, "application/xml");
-                    const paragraphs = doc.getElementsByTagName("w:t");
-                    let text = "";
+                    const paragraphs = doc.getElementsByTagName("w:p");
+                    const content = [];
                     for (let i = 0; i < paragraphs.length; i++) {
-                        text += paragraphs[i].textContent + "\n\n"; // Add double line breaks for paragraphs
+                        let paragraphText = "";
+                        const texts = paragraphs[i].getElementsByTagName("w:t");
+                        for (let j = 0; j < texts.length; j++) {
+                            paragraphText += texts[j].textContent;
+                        }
+                        if (paragraphText.trim()) {
+                            content.push(paragraphText.trim());
+                        }
                     }
-                    resolve(text);
+                    resolve(content);
                 }).catch(reject);
             });
         }
@@ -99,22 +82,24 @@
             const response = await fetch(fileName);
             const arrayBuffer = await response.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let text = "";
+            const content = [];
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const content = await page.getTextContent();
-                text += content.items.map(item => item.str).join(' ') + "\n\n"; // Add double line breaks for paragraphs
+                const pageContent = await page.getTextContent();
+                const pageText = pageContent.items.map(item => item.str).join(' ');
+                content.push(pageText.trim());
             }
-            currentMessage = formatText(text);
-            startTyping(currentMessage);
+            renderContent(content);
         }
 
-        // Format text to ensure proper paragraph style
-        function formatText(text) {
-            return text
-                .trim()
-                .replace(/\n\s*\n/g, '\n\n') // Ensure consistent paragraph spacing
-                .replace(/\n/g, '\n   '); // Add indentation for each paragraph
+        // Render paragraphs as <p> elements
+        function renderContent(paragraphs) {
+            textElement.innerHTML = ""; // Clear previous content
+            paragraphs.forEach(paragraph => {
+                const p = document.createElement("p");
+                p.textContent = paragraph;
+                textElement.appendChild(p);
+            });
         }
 
         // Load the designated file from the repository
