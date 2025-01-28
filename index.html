@@ -12,11 +12,12 @@
         body {
             font-family: 'CustomFont', Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-image: url('Paper-Background.png'); /* Replace with your background image path */
+            background-image: url('Paper-Background'); /* Replace with your background image path */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -33,9 +34,25 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
             overflow-y: auto; /* Scroll if content overflows */
-            max-height: 90vh; /* Prevent text overflow */
+            max-height: 70vh; /* Prevent text overflow */
             position: relative;
             white-space: pre-wrap; /* Preserve line breaks */
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .control-button img {
+            width: 40px;
+            height: 40px;
         }
         img.random {
             position: absolute;
@@ -47,13 +64,24 @@
 </head>
 <body>
     <div id="text"></div>
+    <div id="controls">
+        <button class="control-button" id="prevPage">
+            <img src="Arrow-Left-icon.png" alt="Previous"> <!-- Replace with your icon path -->
+        </button>
+        <button class="control-button" id="nextPage">
+            <img src="Arrow-Right-icon.png" alt="Next"> <!-- Replace with your icon path -->
+        </button>
+    </div>
 
     <script>
         const textElement = document.getElementById('text');
+        const prevButton = document.getElementById('prevPage');
+        const nextButton = document.getElementById('nextPage');
         const typingSpeed = 50; // milliseconds per letter
         let index = 0;
         let typingInterval;
-        let currentMessage = "";
+        let currentPage = 0;
+        let pages = [];
 
         function typeWriter(message) {
             if (index < message.length) {
@@ -70,18 +98,28 @@
             typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
-        // Allow bypassing the typing effect by clicking
-        document.body.addEventListener('click', () => {
-            clearInterval(typingInterval);
-            textElement.textContent = currentMessage;
+        // Navigate to the previous page
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                startTyping(pages[currentPage]);
+            }
+        });
+
+        // Navigate to the next page
+        nextButton.addEventListener('click', () => {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                startTyping(pages[currentPage]);
+            }
         });
 
         async function readDocxFile(fileName) {
             const response = await fetch(fileName);
             const arrayBuffer = await response.arrayBuffer();
             const paragraphs = await extractParagraphsFromDocx(arrayBuffer);
-            currentMessage = paragraphs.join('\n\n');
-            startTyping(currentMessage);
+            pages = paragraphs;
+            startTyping(pages[currentPage]);
             addRandomImages();
         }
 
@@ -121,12 +159,11 @@
                 const pageText = pageContent.items.map(item => item.str).join(' ');
                 content.push(pageText.trim());
             }
-            currentMessage = content.join('\n\n');
-            startTyping(currentMessage);
+            pages = content;
+            startTyping(pages[currentPage]);
             addRandomImages();
         }
 
-        // Function to add random images around the page
         function addRandomImages() {
             const images = [
                 'RockyHorrorPicture.jpg', // Replace with your image paths
@@ -145,7 +182,6 @@
             }
         }
 
-        // Load the designated file from the repository
         const designatedFileName = "Self-Quarntine.pdf"; // Replace with your file name in the repository
         if (designatedFileName.endsWith('.docx')) {
             readDocxFile(designatedFileName);
@@ -153,13 +189,11 @@
             readPdfFile(designatedFileName);
         }
 
-        // Load the PDF.js library
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
         script.onload = () => console.log("PDF.js loaded.");
         document.head.appendChild(script);
 
-        // Load the JSZip library
         const jsZipScript = document.createElement('script');
         jsZipScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
         jsZipScript.onload = () => console.log("JSZip loaded.");
