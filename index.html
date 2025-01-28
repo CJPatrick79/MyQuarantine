@@ -95,6 +95,7 @@
         function startTyping(message) {
             index = 0;
             textElement.textContent = "";
+            clearInterval(typingInterval);
             typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
@@ -119,7 +120,9 @@
             const arrayBuffer = await response.arrayBuffer();
             const paragraphs = await extractParagraphsFromDocx(arrayBuffer);
             pages = paragraphs;
-            startTyping(pages[currentPage]);
+            if (pages.length > 0) {
+                startTyping(pages[currentPage]);
+            }
             addRandomImages();
         }
 
@@ -160,7 +163,9 @@
                 content.push(pageText.trim());
             }
             pages = content;
-            startTyping(pages[currentPage]);
+            if (pages.length > 0) {
+                startTyping(pages[currentPage]);
+            }
             addRandomImages();
         }
 
