@@ -16,10 +16,11 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-image: url('Paper-Background.png'); /* Replace with your background image path */
+            background-image: url('Paper_Background.png'); /* Replace with your background image path */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            overflow: hidden; /* Prevent scrollbars */
         }
         #text {
             width: 90%;
@@ -33,10 +34,14 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
             overflow-y: auto; /* Scroll if content overflows */
             max-height: 90vh; /* Prevent text overflow */
+            position: relative;
+            white-space: pre-wrap; /* Preserve line breaks */
         }
-        p {
-            text-indent: 2em; /* Indent paragraphs */
-            margin-bottom: 1em; /* Add spacing between paragraphs */
+        img.random {
+            position: absolute;
+            max-width: 100px;
+            opacity: 0.7;
+            transform: rotate(calc(var(--angle, 0deg)));
         }
     </style>
 </head>
@@ -45,12 +50,39 @@
 
     <script>
         const textElement = document.getElementById('text');
+        const typingSpeed = 50; // milliseconds per letter
+        let index = 0;
+        let typingInterval;
+        let currentMessage = "";
+
+        function typeWriter(message) {
+            if (index < message.length) {
+                textElement.textContent += message[index];
+                index++;
+            } else {
+                clearInterval(typingInterval);
+            }
+        }
+
+        function startTyping(message) {
+            index = 0;
+            textElement.textContent = "";
+            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
+        }
+
+        // Allow bypassing the typing effect by clicking
+        document.body.addEventListener('click', () => {
+            clearInterval(typingInterval);
+            textElement.textContent = currentMessage;
+        });
 
         async function readDocxFile(fileName) {
             const response = await fetch(fileName);
             const arrayBuffer = await response.arrayBuffer();
             const paragraphs = await extractParagraphsFromDocx(arrayBuffer);
-            renderContent(paragraphs);
+            currentMessage = paragraphs.join('\n\n');
+            startTyping(currentMessage);
+            addRandomImages();
         }
 
         function extractParagraphsFromDocx(arrayBuffer) {
@@ -89,17 +121,28 @@
                 const pageText = pageContent.items.map(item => item.str).join(' ');
                 content.push(pageText.trim());
             }
-            renderContent(content);
+            currentMessage = content.join('\n\n');
+            startTyping(currentMessage);
+            addRandomImages();
         }
 
-        // Render paragraphs as <p> elements
-        function renderContent(paragraphs) {
-            textElement.innerHTML = ""; // Clear previous content
-            paragraphs.forEach(paragraph => {
-                const p = document.createElement("p");
-                p.textContent = paragraph;
-                textElement.appendChild(p);
-            });
+        // Function to add random images around the page
+        function addRandomImages() {
+            const images = [
+                'RockyHorrorPicture.jpg', // Replace with your image paths
+                'RockyHorrorPicture.jpg',
+                'RockyHorrorPicture.jpg'
+            ];
+
+            for (let i = 0; i < 5; i++) { // Add 5 random images
+                const img = document.createElement('img');
+                img.src = images[Math.floor(Math.random() * images.length)];
+                img.className = 'random';
+                img.style.top = Math.random() * 90 + '%';
+                img.style.left = Math.random() * 90 + '%';
+                img.style.setProperty('--angle', `${Math.random() * 360}deg`);
+                document.body.appendChild(img);
+            }
         }
 
         // Load the designated file from the repository
