@@ -82,11 +82,10 @@
         let typingInterval;
         let currentPage = 0;
         let pages = [];
-        let currentMessage = "";
 
-        function typeWriter() {
-            if (index < currentMessage.length) {
-                textElement.textContent += currentMessage[index];
+        function typeWriter(message) {
+            if (index < message.length) {
+                textElement.textContent += message[index];
                 index++;
             } else {
                 clearInterval(typingInterval);
@@ -96,26 +95,25 @@
         function startTyping(message) {
             index = 0;
             textElement.textContent = "";
-            currentMessage = message;
             clearInterval(typingInterval);
-            typingInterval = setInterval(typeWriter, typingSpeed);
+            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
-        function changePage(newPage) {
-            if (newPage >= 0 && newPage < pages.length) {
-                currentPage = newPage;
+        // Navigate to the previous page
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
                 startTyping(pages[currentPage]);
-                addRandomImages();
             }
-        }
-
-        document.body.addEventListener('click', () => {
-            clearInterval(typingInterval);
-            textElement.textContent = currentMessage;
         });
 
-        prevButton.addEventListener('click', () => changePage(currentPage - 1));
-        nextButton.addEventListener('click', () => changePage(currentPage + 1));
+        // Navigate to the next page
+        nextButton.addEventListener('click', () => {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                startTyping(pages[currentPage]);
+            }
+        });
 
         async function readDocxFile(fileName) {
             const response = await fetch(fileName);
@@ -124,8 +122,8 @@
             pages = paragraphs;
             if (pages.length > 0) {
                 startTyping(pages[currentPage]);
-                addRandomImages();
             }
+            addRandomImages();
         }
 
         function extractParagraphsFromDocx(arrayBuffer) {
@@ -153,14 +151,32 @@
             });
         }
 
+        async function readPdfFile(fileName) {
+            const response = await fetch(fileName);
+            const arrayBuffer = await response.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const content = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const pageContent = await page.getTextContent();
+                const pageText = pageContent.items.map(item => item.str).join(' ');
+                content.push(pageText.trim());
+            }
+            pages = content;
+            if (pages.length > 0) {
+                startTyping(pages[currentPage]);
+            }
+            addRandomImages();
+        }
+
         function addRandomImages() {
-            document.querySelectorAll('img.random').forEach(img => img.remove());
             const images = [
+                'RockyHorrorPicture.jpg', // Replace with your image paths
                 'RockyHorrorPicture.jpg',
-                'RockyHorrorPicture2.jpg',
-                'RockyHorrorPicture3.jpg'
+                'RockyHorrorPicture.jpg'
             ];
-            for (let i = 0; i < 5; i++) {
+
+            for (let i = 0; i < 5; i++) { // Add 5 random images
                 const img = document.createElement('img');
                 img.src = images[Math.floor(Math.random() * images.length)];
                 img.className = 'random';
@@ -171,10 +187,22 @@
             }
         }
 
-        const designatedFileName = "Self-Quarntine.pdf";
+        const designatedFileName = "Self-Quarntine.pdf"; // Replace with your file name in the repository
         if (designatedFileName.endsWith('.docx')) {
             readDocxFile(designatedFileName);
+        } else if (designatedFileName.endsWith('.pdf')) {
+            readPdfFile(designatedFileName);
         }
+
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
+        script.onload = () => console.log("PDF.js loaded.");
+        document.head.appendChild(script);
+
+        const jsZipScript = document.createElement('script');
+        jsZipScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+        jsZipScript.onload = () => console.log("JSZip loaded.");
+        document.head.appendChild(jsZipScript);
     </script>
 </body>
 </html>
