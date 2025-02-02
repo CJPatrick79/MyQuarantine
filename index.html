@@ -17,138 +17,59 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-image: url('Paper-Background.png'); /* Replace with your background image path */
+            background-image: url('Paper-Background.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            overflow: hidden; /* Prevent scrollbars */
+            text-align: center;
+            padding: 20px;
         }
         #text {
-            width: 90%;
+            width: 80%;
             max-width: 800px;
-            font-size: 18px;
+            font-size: 20px;
             color: #333;
-            line-height: 1.8; /* Adjust line spacing */
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background for readability */
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-            overflow-y: auto; /* Scroll if content overflows */
-            max-height: 70vh; /* Prevent text overflow */
+            line-height: 1.8;
             position: relative;
-            white-space: pre-wrap; /* Preserve line breaks */
-        }
-        #controls {
-            display: flex;
-            justify-content: space-between;
-            width: 90%;
-            max-width: 800px;
-            margin-top: 20px;
-        }
-        .control-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        .control-button img {
-            width: 40px;
-            height: 40px;
+            white-space: pre-wrap;
+            padding-bottom: 10px;
+            border-bottom: 5px solid black; /* Thick underline */
         }
         img.random {
             position: absolute;
-            max-width: 100px;
-            opacity: 0.7;
-            transform: rotate(calc(var(--angle, 0deg)));
+            max-width: 150px;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
     <div id="text"></div>
-    <div id="controls">
-        <button class="control-button" id="prevPage">
-            <img src="Arrow-Left-icon.png" alt="Previous"> <!-- Replace with your icon path -->
-        </button>
-        <button class="control-button" id="nextPage">
-            <img src="Arrow-Right-icon.png" alt="Next"> <!-- Replace with your icon path -->
-        </button>
-    </div>
-
+    
     <script>
         const textElement = document.getElementById('text');
-        const prevButton = document.getElementById('prevPage');
-        const nextButton = document.getElementById('nextPage');
-        const typingSpeed = 50; // milliseconds per letter
-        let index = 0;
-        let typingInterval;
         let currentPage = 0;
         let pages = [];
 
-        function typeWriter(message) {
-            if (index < message.length) {
-                textElement.textContent += message[index];
-                index++;
-            } else {
-                clearInterval(typingInterval);
-            }
-        }
-
         function startTyping(message) {
-            index = 0;
-            textElement.textContent = "";
-            clearInterval(typingInterval);
-            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
-        }
-
-        // Navigate to the previous page
-        prevButton.addEventListener('click', () => {
-            if (currentPage > 0) {
-                currentPage--;
-                startTyping(pages[currentPage]);
-            }
-        });
-
-        // Navigate to the next page
-        nextButton.addEventListener('click', () => {
-            if (currentPage < pages.length - 1) {
-                currentPage++;
-                startTyping(pages[currentPage]);
-            }
-        });
-
-        async function readDocxFile(fileName) {
-            const response = await fetch(fileName);
-            const arrayBuffer = await response.arrayBuffer();
-            const paragraphs = await extractParagraphsFromDocx(arrayBuffer);
-            pages = paragraphs;
-            if (pages.length > 0) {
-                startTyping(pages[currentPage]);
-            }
+            textElement.textContent = message;
             addRandomImages();
         }
 
-        function extractParagraphsFromDocx(arrayBuffer) {
-            return new Promise((resolve, reject) => {
-                const JSZip = window.JSZip;
-                JSZip.loadAsync(arrayBuffer).then((zip) => {
-                    return zip.file("word/document.xml").async("string");
-                }).then((xml) => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(xml, "application/xml");
-                    const paragraphs = doc.getElementsByTagName("w:p");
-                    const content = [];
-                    for (let i = 0; i < paragraphs.length; i++) {
-                        let paragraphText = "";
-                        const texts = paragraphs[i].getElementsByTagName("w:t");
-                        for (let j = 0; j < texts.length; j++) {
-                            paragraphText += texts[j].textContent;
-                        }
-                        if (paragraphText.trim()) {
-                            content.push(paragraphText.trim());
-                        }
-                    }
-                    resolve(content);
-                }).catch(reject);
-            });
+        function addRandomImages() {
+            const images = [
+                'RockyHorrorPicture.jpg',
+                'Sunset.gif'
+            ];
+            document.querySelectorAll('img.random').forEach(img => img.remove());
+            
+            for (let i = 0; i < 2; i++) { // Add 2 images
+                const img = document.createElement('img');
+                img.src = images[Math.floor(Math.random() * images.length)];
+                img.className = 'random';
+                img.style.top = Math.random() * 60 + '%';
+                img.style.left = Math.random() < 0.5 ? '5%' : '85%';
+                document.body.appendChild(img);
+            }
         }
 
         async function readPdfFile(fileName) {
@@ -166,43 +87,16 @@
             if (pages.length > 0) {
                 startTyping(pages[currentPage]);
             }
-            addRandomImages();
         }
 
-        function addRandomImages() {
-            const images = [
-                'RockyHorrorPicture.jpg', // Replace with your image paths
-                'RockyHorrorPicture.jpg',
-                'Sunset.gif'
-            ];
-
-            for (let i = 0; i < 5; i++) { // Add 5 random images
-                const img = document.createElement('img');
-                img.src = images[Math.floor(Math.random() * images.length)];
-                img.className = 'random';
-                img.style.top = Math.random() * 90 + '%';
-                img.style.left = Math.random() * 90 + '%';
-                img.style.setProperty('--angle', `${Math.random() * 360}deg`);
-                document.body.appendChild(img);
-            }
-        }
-
-        const designatedFileName = "Self-Quarntine.pdf"; // Replace with your file name in the repository
-        if (designatedFileName.endsWith('.docx')) {
-            readDocxFile(designatedFileName);
-        } else if (designatedFileName.endsWith('.pdf')) {
+        const designatedFileName = "Self-Quarntine.pdf";
+        if (designatedFileName.endsWith('.pdf')) {
             readPdfFile(designatedFileName);
         }
 
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
-        script.onload = () => console.log("PDF.js loaded.");
         document.head.appendChild(script);
-
-        const jsZipScript = document.createElement('script');
-        jsZipScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-        jsZipScript.onload = () => console.log("JSZip loaded.");
-        document.head.appendChild(jsZipScript);
     </script>
 </body>
 </html>
