@@ -33,8 +33,6 @@
             position: relative;
             white-space: pre-wrap;
             display: inline-block;
-            padding-bottom: 5px;
-            border-bottom: 5px solid black;
             word-spacing: 5px;
         }
         img.random {
@@ -105,7 +103,7 @@
 
         function skipTypewriter() {
             clearInterval(typingInterval);
-            textElement.innerHTML = pages[currentPage].split('').map(char => `<span style='border-bottom: 5px solid black;'>${char}</span>`).join('');
+            textElement.innerHTML = pages[currentPage];
             if (!imageAdded) {
                 addRandomImage();
                 imageAdded = true;
