@@ -32,12 +32,13 @@
             line-height: 1.8;
             position: relative;
             white-space: pre-wrap;
-            padding-bottom: 10px;
-            border-bottom: 5px solid black; /* Thick underline */
+        }
+        #text span {
+            text-decoration: underline;
         }
         img.random {
             position: absolute;
-            max-width: 150px;
+            max-width: 300px; /* Enlarged image size */
             opacity: 0.8;
         }
     </style>
@@ -49,10 +50,30 @@
         const textElement = document.getElementById('text');
         let currentPage = 0;
         let pages = [];
+        let index = 0;
+        let typingInterval;
+        const typingSpeed = 50;
+
+        function typeWriter(message) {
+            if (index < message.length) {
+                let char = message[index];
+                if (char === ' ') {
+                    textElement.innerHTML += ' ';
+                } else {
+                    textElement.innerHTML += `<span>${char}</span>`;
+                }
+                index++;
+            } else {
+                clearInterval(typingInterval);
+                addRandomImages();
+            }
+        }
 
         function startTyping(message) {
-            textElement.textContent = message;
-            addRandomImages();
+            index = 0;
+            textElement.innerHTML = "";
+            clearInterval(typingInterval);
+            typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
         function addRandomImages() {
