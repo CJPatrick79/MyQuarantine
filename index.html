@@ -41,13 +41,39 @@
             max-width: 400px; /* Enlarged image size */
             opacity: 0.8;
         }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .control-button img {
+            width: 40px;
+            height: 40px;
+        }
     </style>
 </head>
 <body onclick="skipTypewriter()">
     <div id="text"></div>
+    <div id="controls">
+        <button class="control-button" id="prevPage">
+            <img src="Arrow-Left-icon.png" alt="Previous">
+        </button>
+        <button class="control-button" id="nextPage">
+            <img src="Arrow-Right-icon.png" alt="Next">
+        </button>
+    </div>
     
     <script>
         const textElement = document.getElementById('text');
+        const prevButton = document.getElementById('prevPage');
+        const nextButton = document.getElementById('nextPage');
         let currentPage = 0;
         let pages = [];
         let index = 0;
@@ -109,6 +135,20 @@
                 startTyping(pages[currentPage]);
             }
         }
+
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                startTyping(pages[currentPage]);
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                startTyping(pages[currentPage]);
+            }
+        });
 
         const designatedFileName = "Self-Quarntine.pdf";
         if (designatedFileName.endsWith('.pdf')) {
