@@ -33,12 +33,13 @@
             position: relative;
             white-space: pre-wrap;
             display: inline-block;
-            border-bottom: 5px solid black; /* Thick underline for entire text */
             padding-bottom: 5px;
+            border-bottom: 5px solid black;
+            word-spacing: 5px;
         }
         img.random {
             position: absolute;
-            max-width: 400px; /* Enlarged image size */
+            max-width: 400px;
             opacity: 0.8;
         }
         #controls {
@@ -79,28 +80,36 @@
         let index = 0;
         let typingInterval;
         const typingSpeed = 50;
+        let imageAdded = false;
 
         function typeWriter(message) {
             if (index < message.length) {
-                textElement.textContent += message[index];
+                textElement.innerHTML += `<span style='border-bottom: 5px solid black;'>${message[index]}</span>`;
                 index++;
             } else {
                 clearInterval(typingInterval);
-                addRandomImage();
+                if (!imageAdded) {
+                    addRandomImage();
+                    imageAdded = true;
+                }
             }
         }
 
         function startTyping(message) {
             index = 0;
-            textElement.textContent = "";
+            textElement.innerHTML = "";
             clearInterval(typingInterval);
+            imageAdded = false;
             typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
         function skipTypewriter() {
             clearInterval(typingInterval);
-            textElement.textContent = pages[currentPage];
-            addRandomImage();
+            textElement.innerHTML = pages[currentPage].split('').map(char => `<span style='border-bottom: 5px solid black;'>${char}</span>`).join('');
+            if (!imageAdded) {
+                addRandomImage();
+                imageAdded = true;
+            }
         }
 
         function addRandomImage() {
@@ -108,15 +117,15 @@
                 'RockyHorrorPicture.jpg',
                 'Sunset.gif'
             ];
-            document.querySelectorAll('img.random').forEach(img => img.remove());
-            
-            const img = document.createElement('img');
-            img.src = images[Math.floor(Math.random() * images.length)];
-            img.className = 'random';
-            img.style.top = '50%';
-            img.style.left = Math.random() < 0.5 ? '5%' : '85%';
-            img.style.transform = 'translateY(-50%)';
-            document.body.appendChild(img);
+            if (!document.querySelector('img.random')) {
+                const img = document.createElement('img');
+                img.src = images[Math.floor(Math.random() * images.length)];
+                img.className = 'random';
+                img.style.top = '50%';
+                img.style.left = Math.random() < 0.5 ? '5%' : '85%';
+                img.style.transform = 'translateY(-50%)';
+                document.body.appendChild(img);
+            }
         }
 
         async function readPdfFile(fileName) {
