@@ -32,18 +32,18 @@
             line-height: 1.8;
             position: relative;
             white-space: pre-wrap;
-        }
-        #text span {
-            text-decoration: underline;
+            display: inline-block;
+            border-bottom: 5px solid black; /* Thick underline for entire text */
+            padding-bottom: 5px;
         }
         img.random {
             position: absolute;
-            max-width: 300px; /* Enlarged image size */
+            max-width: 400px; /* Enlarged image size */
             opacity: 0.8;
         }
     </style>
 </head>
-<body>
+<body onclick="skipTypewriter()">
     <div id="text"></div>
     
     <script>
@@ -56,41 +56,41 @@
 
         function typeWriter(message) {
             if (index < message.length) {
-                let char = message[index];
-                if (char === ' ') {
-                    textElement.innerHTML += ' ';
-                } else {
-                    textElement.innerHTML += `<span>${char}</span>`;
-                }
+                textElement.textContent += message[index];
                 index++;
             } else {
                 clearInterval(typingInterval);
-                addRandomImages();
+                addRandomImage();
             }
         }
 
         function startTyping(message) {
             index = 0;
-            textElement.innerHTML = "";
+            textElement.textContent = "";
             clearInterval(typingInterval);
             typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
-        function addRandomImages() {
+        function skipTypewriter() {
+            clearInterval(typingInterval);
+            textElement.textContent = pages[currentPage];
+            addRandomImage();
+        }
+
+        function addRandomImage() {
             const images = [
                 'RockyHorrorPicture.jpg',
                 'Sunset.gif'
             ];
             document.querySelectorAll('img.random').forEach(img => img.remove());
             
-            for (let i = 0; i < 2; i++) { // Add 2 images
-                const img = document.createElement('img');
-                img.src = images[Math.floor(Math.random() * images.length)];
-                img.className = 'random';
-                img.style.top = Math.random() * 60 + '%';
-                img.style.left = Math.random() < 0.5 ? '5%' : '85%';
-                document.body.appendChild(img);
-            }
+            const img = document.createElement('img');
+            img.src = images[Math.floor(Math.random() * images.length)];
+            img.className = 'random';
+            img.style.top = '50%';
+            img.style.left = Math.random() < 0.5 ? '5%' : '85%';
+            img.style.transform = 'translateY(-50%)';
+            document.body.appendChild(img);
         }
 
         async function readPdfFile(fileName) {
