@@ -35,10 +35,12 @@
             display: inline-block;
             word-spacing: 5px;
         }
-        img.random {
+        img.page-image {
             position: absolute;
             max-width: 400px;
             opacity: 0.8;
+            top: 50%;
+            transform: translateY(-50%);
         }
         #controls {
             display: flex;
@@ -78,7 +80,20 @@
         let index = 0;
         let typingInterval;
         const typingSpeed = 50;
-        let imageAdded = false;
+        let imageData = {}; 
+
+        async function loadCSVData() {
+            const response = await fetch('Self-Quarnantine Images(Sheet1).csv');
+            const text = await response.text();
+            const rows = text.split('\n').slice(1);
+            rows.forEach(row => {
+                const [page, image, position] = row.split(',');
+                imageData[parseInt(page)] = {
+                    image: image.trim(),
+                    position: position.trim()
+                };
+            });
+        }
 
         function typeWriter(message) {
             if (index < message.length) {
@@ -86,10 +101,7 @@
                 index++;
             } else {
                 clearInterval(typingInterval);
-                if (!imageAdded) {
-                    addRandomImage();
-                    imageAdded = true;
-                }
+                showImage(currentPage);
             }
         }
 
@@ -97,31 +109,24 @@
             index = 0;
             textElement.innerHTML = "";
             clearInterval(typingInterval);
-            imageAdded = false;
             typingInterval = setInterval(() => typeWriter(message), typingSpeed);
         }
 
         function skipTypewriter() {
             clearInterval(typingInterval);
             textElement.innerHTML = pages[currentPage];
-            if (!imageAdded) {
-                addRandomImage();
-                imageAdded = true;
-            }
+            showImage(currentPage);
         }
 
-        function addRandomImage() {
-            const images = [
-                'RockyHorrorPicture.jpg',
-                'Sunset.gif'
-            ];
-            if (!document.querySelector('img.random')) {
+        function showImage(pageNumber) {
+            const existingImage = document.querySelector('img.page-image');
+            if (existingImage) existingImage.remove();
+            
+            if (imageData[pageNumber]) {
                 const img = document.createElement('img');
-                img.src = images[Math.floor(Math.random() * images.length)];
-                img.className = 'random';
-                img.style.top = '50%';
-                img.style.left = Math.random() < 0.5 ? '5%' : '85%';
-                img.style.transform = 'translateY(-50%)';
+                img.src = imageData[pageNumber].image;
+                img.className = 'page-image';
+                img.style.left = imageData[pageNumber].position === 'left' ? '5%' : '85%';
                 document.body.appendChild(img);
             }
         }
@@ -157,10 +162,13 @@
             }
         });
 
-        const designatedFileName = "Self-Quarntine.pdf";
-        if (designatedFileName.endsWith('.pdf')) {
-            readPdfFile(designatedFileName);
-        }
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadCSVData();
+            const designatedFileName = "Self-Quarntine.pdf";
+            if (designatedFileName.endsWith('.pdf')) {
+                readPdfFile(designatedFileName);
+            }
+        });
 
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
@@ -168,4 +176,3 @@
     </script>
 </body>
 </html>
-
