@@ -83,7 +83,7 @@
         let imageData = {}; 
 
         async function loadCSVData() {
-            const response = await fetch('image_data.csv');
+            const response = await fetch('Self-Quarnantine Images(Sheet1).csv');
             const text = await response.text();
             const rows = text.split('\n').slice(1);
             rows.forEach(row => {
