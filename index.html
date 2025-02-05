@@ -83,7 +83,7 @@
         let imageData = {}; 
 
         async function loadCSVData() {
-            const response = await fetch('Self-Quarnantine Images(Sheet1).csv');
+            const response = await fetch('image_data.csv');
             const text = await response.text();
             const rows = text.split('\n').slice(1);
             rows.forEach(row => {
@@ -126,7 +126,14 @@
                 const img = document.createElement('img');
                 img.src = imageData[pageNumber].image;
                 img.className = 'page-image';
-                img.style.left = imageData[pageNumber].position === 'left' ? '5%' : '85%';
+                
+                if (imageData[pageNumber].position === 'left') {
+                    img.style.left = '0%';
+                    img.style.right = 'auto';
+                } else {
+                    img.style.left = 'auto';
+                    img.style.right = '0%';
+                }
                 document.body.appendChild(img);
             }
         }
