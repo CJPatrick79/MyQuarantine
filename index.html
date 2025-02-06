@@ -66,6 +66,7 @@
             height: 40px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 </head>
 <body onclick="skipTypewriter()">
     <div id="text"></div>
@@ -132,8 +133,7 @@
             if (imageData[pageNumber]) {
                 const img = document.createElement('img');
                 img.src = imageData[pageNumber].image;
-                img.className = 'page-image';
-                img.classList.add(imageData[pageNumber].position === 'left' ? 'left' : 'right');
+                img.className = 'page-image ' + (imageData[pageNumber].position === 'left' ? 'left' : 'right');
                 document.body.appendChild(img);
             }
         }
@@ -176,10 +176,6 @@
                 readPdfFile(designatedFileName);
             }
         });
-
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js";
-        document.head.appendChild(script);
     </script>
 </body>
 </html>
