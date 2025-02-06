@@ -23,6 +23,7 @@
             background-repeat: no-repeat;
             text-align: center;
             padding: 20px;
+            position: relative;
         }
         #text {
             width: 80%;
@@ -41,6 +42,12 @@
             opacity: 0.8;
             top: 50%;
             transform: translateY(-50%);
+        }
+        .left {
+            left: 5%;
+        }
+        .right {
+            right: 5%;
         }
         #controls {
             display: flex;
@@ -87,11 +94,11 @@
             const text = await response.text();
             const rows = text.split('\n').slice(1);
             rows.forEach(row => {
-                const columns = row.split(',').map(col => col.trim());
-                if (columns.length === 3) {
-                    const [page, image, position] = columns;
-                    imageData[parseInt(page)] = { image, position };
-                }
+                const [page, image, position] = row.split(',');
+                imageData[parseInt(page)] = {
+                    image: image.trim(),
+                    position: position.trim().toLowerCase()
+                };
             });
         }
 
@@ -126,35 +133,25 @@
                 const img = document.createElement('img');
                 img.src = imageData[pageNumber].image;
                 img.className = 'page-image';
-                
-                if (imageData[pageNumber].position === 'left') {
-                    img.style.left = '0%';
-                    img.style.right = 'auto';
-                } else {
-                    img.style.left = 'auto';
-                    img.style.right = '0%';
-                }
+                img.classList.add(imageData[pageNumber].position === 'left' ? 'left' : 'right');
                 document.body.appendChild(img);
             }
         }
 
-        async function readPdfFile(fileName) {
-            try {
-                const response = await fetch(fileName);
-                if (!response.ok) throw new Error(`Failed to load ${fileName}`);
-                const arrayBuffer = await response.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                const content = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const pageContent = await page.getTextContent();
-                    const pageText = pageContent.items.map(item => item.str).join(' ');
-                    content.push(pageText.trim());
-                }
-                pages = content;
-                if (pages.length > 0) startTyping(pages[currentPage]);
-            } catch (error) {
-                console.error("Error loading PDF:", error);
+        async function readPdfFile(filename) {
+            const response = await fetch(filename);
+            const arrayBuffer = await response.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const content = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const pageContent = await page.getTextContent();
+                const pageText = pageContent.items.map(item => item.str).join(' ');
+                content.push(pageText.trim());
+            }
+            pages = content;
+            if (pages.length > 0) {
+                startTyping(pages[currentPage]);
             }
         }
 
